@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: jupyter julia 3
+# key: jl
+# --
+
+#+BEGIN_SRC jupyter-julia :session jl
+$0
+#+END_SRC

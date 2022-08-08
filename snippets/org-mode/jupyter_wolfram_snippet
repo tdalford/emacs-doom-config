@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: jupyter wolfram
+# key: jw
+# --
+
+#+BEGIN_SRC jupyter-Wolfram-Language :session wo :kernel wolfram :display plain
+$0
+#+END_SRC
