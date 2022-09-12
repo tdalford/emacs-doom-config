@@ -3,6 +3,6 @@
 # key: jp
 # --
 
-#+BEGIN_SRC jupyter-python :session py :kernel python3
+#+BEGIN_SRC jupyter-python
   $0
 #+END_SRC

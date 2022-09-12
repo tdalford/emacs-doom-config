@@ -59,7 +59,7 @@ determine the exact padding."
    ;; need to change comments, types, constants, numbers
    ;; settle to numbers/constants=purple, comments=blue, types=orange
    ;; change docstrings to yellow
-   (highlight      orange)
+   (highlight      cyan) ;; change from orange
    (vertical-bar   (doom-lighten bg 0.1))
    (selection      base5)
    (builtin        magenta) ;; change from orange to magenta!
@@ -191,7 +191,12 @@ determine the exact padding."
    (mu4e-highlight-face :inherit 'font-lock-pseudo-keyword-face)
 
    ;; show paren match make a background to set apart from rainbow delims
-   (show-paren-match  :background green :foreground bg))
+   (show-paren-match  :background green :foreground bg)
+
+   ;; different face for treemacs files vs directories
+   ;; use same as dired here
+   (treemacs-directory-face :foreground blue)
+   )
 
   ;;;; Base theme variable overrides
   ;; ()

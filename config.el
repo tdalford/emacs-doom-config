@@ -11,7 +11,7 @@
 ;; Some functionality uses this to identify you, e.g. GPG configuration, email
 ;; clients, file templates and snippets. It is optional.
 (setq user-full-name "Tommy Alford"
-      user-mail-address "tdalford@gmail.com")
+      user-mail-address "tdalford1@gmail.com")
 
 ;; Doom exposes five (optional) variables for controlling fonts in Doom:
 ;;
@@ -42,9 +42,11 @@
 ;; (setq doom-theme 'doom-monokai-classic) ;;original
 (setq doom-theme 'my-doom-monokai-classic) ;;my modified monokai which is better
 
-;; light theme for unlight
+
+;; light theme for sunlight
 ;; (setq doom-one-light-brighter-comments t)
 ;; (setq doom-theme 'my-doom-one-light) ;;or can use the original doom-one-light
+;; (load-theme 'my-doom-one-light t)
 
 ;; This determines the style of line numbers in effect. If set to `nil', line
 ;; numbers are disabled. For relative line numbers, set this to `relative'.
@@ -125,6 +127,10 @@
                                     helm-source-recentf
                                     helm-source-bookmarks
                                     helm-source-buffer-not-found))
+
+  ;; don't include .pngs in recent files, they blow up the size.
+  (add-to-list 'recentf-exclude "\\.png\\'")
+
   )
 
 ;; Make C-s swiper for file searches
@@ -178,21 +184,20 @@
 ;;         (fci-mode 1))))
 ;; (global-fci-mode 1)
 
-;; (setq-default fill-column 79)
-
 ;; specialized display fill column mode
 ;; but the native mode has gaps in it on my mac
-(define-globalized-minor-mode global-display-fci-mode display-fill-column-indicator-mode
-    (lambda ()
-      (if (and
-           (not (string-match "^\*.*\*$" (buffer-name)))
-           (not (eq major-mode 'dired-mode))
-           (not (derived-mode-p 'doc-view-mode 'eshell-mode)))
-          ;; we'll keep the fill column in org for babel purposes
-          ;; (not (eq major-mode 'org-mode))
-          (display-fill-column-indicator-mode 1))))
+;; (define-globalized-minor-mode global-display-fci-mode display-fill-column-indicator-mode
+;;   (lambda ()
+;;     (if (and
+;;          ;; (not (string-match "^\*.*\*$" (buffer-name)))
+;;          (not (eq major-mode 'dired-mode))
+;;          (not (derived-mode-p 'doc-view-mode 'eshell-mode)))
+;;         ;; gonna try commenting out
+;;         ;; (not (eq major-mode 'org-mode))
+;;         (display-fill-column-indicator-mode 1))))
 
-(global-display-fci-mode 1)
+(setq-default fill-column 79)
+(add-hook 'prog-mode-hook 'fci-mode)
 
 ;; add some initial height and width params
 (add-to-list 'default-frame-alist '(width . 98))
@@ -240,7 +245,11 @@
   (setq org-src-preserve-indentation t)
   ;; make it so org does not indent subheaders at startup (can still specify
   ;; later)
-  (setq org-startup-indented nil)
+  ;; actually startup indented i'd say
+  ;; (setq org-startup-indented nil)
+
+  ;; make tab
+  ;; (setq org-src-tab-acts-natively t)
 
   ;; org-mode stuff for keyworks-- condense to just 3
   (setq org-todo-keywords
@@ -282,10 +291,7 @@
   (set-face-attribute 'org-level-3 nil :inherit 'outline-3 :height 1.15)
   (set-face-attribute 'org-level-2 nil :inherit 'outline-2 :height 1.2)
   (set-face-attribute 'org-level-1 nil :inherit 'outline-1 :height 1.3)
-  ;; Only use the first 4 styles and do not cycle.
-  (setq org-cycle-level-faces nil)
-  (setq org-n-level-faces 4)
-  ;; Document Title, (\huge)
+  ;; Make the org title large
   (set-face-attribute 'org-document-title nil
                       :height 2.074
                       :foreground 'unspecified
@@ -323,7 +329,20 @@
                 return 110 107 60] 0 "%d")) arg)))
   (map! :map org-mode-map "C-c C-g" 'convert-jupyter-babel)
 
+  ;; show smartparens in org (since they are by default not shown)
+  ;; see (lang/org/config.el:1276)
+  (remove-hook 'org-mode-hook #'doom-disable-show-paren-mode-h)
+
+  ;;; display/update images in the buffer after I evaluate
+  (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
   )
+
+(after! evil-org
+  (remove-hook 'org-tab-first-hook #'+org-cycle-only-current-subtree-h)
+
+  ;; don't clear org babel results with tab (idk why it does this..)
+  (remove-hook 'org-tab-first-hook #'+org-clear-babel-results-h))
+
 
 ;;DONE: add in guiltydolphin org-evil
 (use-package! org-evil
@@ -353,6 +372,10 @@
     "show less information in dired buffers"
     (dired-hide-details-mode 1))
   (add-hook 'dired-mode-hook 'my-dired-mode-setup)
+
+  ;; toggle hidden files in dired with C-x M-o
+  (setq dired-omit-files "^\\...+$")
+  (add-hook 'dired-mode-hook (lambda () (dired-omit-mode 1)))
 )
 
 ;;DONE: get Mu4e sending to work
@@ -383,11 +406,11 @@
 
 ;; make the modeline height be able to decrease
 (defun my-doom-modeline--font-height ()
-  "Calculate the actual char height of the mode-line."
-  (+ (frame-char-height) 2))
+"Calculate the actual char height of the mode-line."
+(+ (frame-char-height) 2))
 
 (advice-add #'doom-modeline--font-height
-            :override #'my-doom-modeline--font-height)
+        :override #'my-doom-modeline--font-height)
 ;; turn on battery, column number mode, size indication mode
 (setq column-number-mode t)
 (setq size-indication-mode t)
@@ -409,14 +432,14 @@
 ;;DONE: get julia linting to work
 (use-package! julia-staticlint
   ;; :load-path "~/.emacs.d/patches/julia-staticlint"
-  :hook ((julia-mode . julia-staticlint-activate))
+  :hook (julia-mode . julia-staticlint-activate)
   :config
   (julia-staticlint-init))
 
 ;;DONE: add python shortcut for quick print statement debug
 (defun python-debug ()
-  (setq yanked (car kill-ring))
   (interactive)
+  (setq yanked (car kill-ring))
   (end-of-line)
   (newline-and-indent)
   (insert "print('")
@@ -442,8 +465,8 @@
        (:exports . "both")))
 
 ;; wolfram
-(setq org-babel-default-header-args:jupyter-Wolfram-Language '
-      ((:async . "yes")
+(setq org-babel-default-header-args:jupyter-Wolfram-Language
+      '((:async . "yes")
        (:exports . "both")
        (:results . "scalar")
        (:session . "wo")
@@ -457,9 +480,11 @@
         (:results . "scalar")
         (:session . "jl")
         (:display . "all")
-        (:display .
-         "text/org image/svg image/jpeg image/png text/plain")
+        (:display . "text/org image/svg image/jpeg image/png text/plain")
         ))
+
+;; nice blog post on jupyter notebooks in org:
+;; https://sqrtminusone.xyz/posts/2021-05-01-org-python/
 
 (after! evil-goggles
   ;; nice seeing when deleting/changing too
@@ -469,3 +494,112 @@
   ;; theme)
   (evil-goggles-use-diff-faces)
   )
+
+;; show line numbers in dired
+(add-hook 'dired-mode-hook #'display-line-numbers-mode)
+
+;; add rainbow delims to all programming modes
+(add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
+
+;; mu4d update interval
+(setq mu4e-update-interval 300)
+
+(use-package! break-line
+  :config
+  (map! :n "M-d" #'break-line-opening-delimiter)
+  (map! :n "M-c" #'break-line-arg-sep)
+  (map! :n "SPC l" #'break-line))
+
+;; (use-package! julia-formatter
+;;   :hook (julia-mode . (lambda() (julia-formatter-server-start))))
+
+;; getting some errors from the not finding some function
+;; for now just don't actually enable julia-formatter-mode we'll just call
+;; the server when calling julia-formatter-format-buffer, etc
+(use-package! julia-formatter
+  ;; :hook (julia-mode  #'julia-formatter-mode)
+  ;; (recommended) load the server in the background after startup
+  ;; think this already loads when we hit julia mode
+  ;; (:hook (julia-mode #'julia-formatter--ensure-server))
+  :config
+  (setq julia-formatter-setup-for-save nil))
+  ;;(map! :map julia-mode-map "SPC j" #'julia-formatter-format-buffer))
+
+;; keep recentf files on exit for when i'm using remote stuff
+(remove-hook 'kill-emacs-hook #'recentf-cleanup)
+
+
+
+;; Make C-c C-c behave like C-u C-c C-c in Python mode
+(defun python-send-buffer-auto-main ()
+  (interactive)
+  (python-shell-send-buffer t))
+(map! :map python-mode-map "C-c C-c" #'python-send-buffer-auto-main)
+
+;; use autopep-8 on save instead of black on save (keep black for format/buffer
+;; if wanted)
+(use-package! py-autopep8
+  :hook (python-mode . py-autopep8-enable-on-save))
+
+(after! treemacs
+  (map! :map treemacs-mode-map [mouse-1] #'treemacs-single-click-expand-action)
+  (treemacs-follow-mode t)
+  (setq treemacs-show-hidden-files nil)
+  (setq treemacs-sorting 'mod-time-desc)
+
+  ;; change treemacs colors
+  (setq doom-themes-treemacs-theme "doom-colors")
+
+  (setq +treemacs-file-ignore-globs
+        '(;; LaTeX
+          "*/_minted-*"
+          ;; AucTeX
+          "*/.auctex-auto"
+          "*/_region_.log"
+          "*/_region_.tex"
+          ;; Python
+          "*/__pycache__")))
+
+;; try to get ipython shell readline error to work
+(setq python-shell-completion-native-enable nil)
+
+;; customn function for restarting the python console
+(defun my-restart-python-console ()
+  "Restart python console before evaluate buffer or region to avoid
+various uncanny conflicts, like not reloding modules even when
+they are changed"
+  (interactive)
+  ;; if no python buffer exists, just ignore this
+  (ignore-errors
+    (kill-process "Python")
+    (sleep-for 0.05)
+    (kill-buffer "*Python*"))
+  (run-python)
+  (other-window 1)
+  (switch-to-buffer "*Python*"))
+
+;; python leader is m
+;; map other python commands to this key to
+;; just can't use e g i t for letters
+(map! :after python
+      :map python-mode-map
+      :localleader
+       "p" #'run-python
+       "z" #'python-shell-switch-to-shell
+       "l" #'python-shell-send-file
+       "r" #'python-shell-send-region
+       "s" #'python-shell-send-string
+       "c" #'python-send-buffer-auto-main
+       "j" #'imenu
+       "d" #'python-describe-at-point
+       "f" #'python-eldoc-at-point
+       "v" #'python-check
+       "x" #'python-shell-send-defun
+       "a" #'my-restart-python-console
+       )
+
+;; quit inferior python mode more easily
+(map! :map inferior-python-mode-map :n "q" #'delete-window)
+
+;; map q to kill buffer in imagemagik buffers
+(map! :map image-mode-map :n "q" #'kill-buffer-and-window)

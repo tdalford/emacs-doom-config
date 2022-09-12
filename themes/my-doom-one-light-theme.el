@@ -30,7 +30,7 @@
   :group 'doom-one-light-theme
   :type 'boolean)
 
-(defcustom doom-one-light-brighter-comments nil
+(defcustom doom-one-light-brighter-comments t ;; make t by default
   "If non-nil, comments will be highlighted in more vivid colors."
   :group 'doom-one-light-theme
   :type 'boolean)
@@ -93,7 +93,7 @@ Can be an integer to determine the exact padding."
    (vertical-bar   (doom-darken base2 0.1))
    (selection      dark-blue)
    (builtin        magenta)
-   (comments       (if doom-one-light-brighter-comments cyan base5))
+   (comments       (if doom-one-light-brighter-comments cyan base5)) ;;change?
    (doc-comments   (doom-darken comments 0.15))
    (constants      violet)
    (functions      magenta)

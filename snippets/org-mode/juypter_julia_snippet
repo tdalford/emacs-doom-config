@@ -3,6 +3,6 @@
 # key: jl
 # --
 
-#+BEGIN_SRC jupyter-julia :session jl
+#+BEGIN_SRC jupyter-julia
 $0
 #+END_SRC

@@ -68,8 +68,32 @@
 ;; own static linter for julia
 (package! julia-staticlint
   ;; forked and upgraded from https://github.com/dmalyuta/julia-staticlint
-  :recipe (:host github :repo "tdalford1/julia-staticlint"
+  :recipe (:host github :repo "tdalford/julia-staticlint"
            :files ("*.el" "*.jl")))
 
 ;; becnhmark starting time
 (package! benchmark-init)
+
+;; custom line-breaker for python/julia
+(package! break-line
+  :recipe (:host github :repo "tdalford/break-line"))
+
+;; julia formatter
+;; didn't work
+;; (package! julia-formatter :disable t
+;;   :recipe (:host github :repo"ki-chi/julia-formatter"))
+
+;; custom forked julia formatter
+(package! julia-formatter
+  :recipe (:host github :repo "tdalford/julia-formatter"
+           :files ("*.el" "*.jl")))
+
+;; wolfram mode again?
+(package! wolfram-mode)
+
+;; use autopep-8 on save instead of black on save (keep black for format/buffer
+;; if wanted)
+(package! py-autopep8)
+
+;; icons for dired migrated from treemacs
+;; (package! treemacs-icons-dired)
