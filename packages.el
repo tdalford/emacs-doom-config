@@ -51,7 +51,9 @@
 
 ;; install org-evil
 ;; this takes a really long time to install... (3s).. weird
-(package! org-evil)
+;; might not work on apple silicon either!
+;; (package! dash)
+;; (package! org-evil)
 
 ;; install multi-line
 (package! multi-line)
@@ -95,5 +97,6 @@
 ;; if wanted)
 (package! py-autopep8)
 
-;; icons for dired migrated from treemacs
-;; (package! treemacs-icons-dired)
+;; export org to ipynb
+;; (package! ox-ipynb
+;;   :recipe (:host github :repo "jkitchin/ox-ipynb"))

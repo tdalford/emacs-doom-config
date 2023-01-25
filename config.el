@@ -5,7 +5,7 @@
 
 ;; for profiling packages
 ;; (require 'benchmark-init)
-;; (add-hook 'doom-first-input-hook #'benchmark-init/deactivate)
+;; (add-hook! 'doom-first-input-hook #'benchmark-init/deactivate)
 
 
 ;; Some functionality uses this to identify you, e.g. GPG configuration, email
@@ -127,11 +127,11 @@
                                     helm-source-recentf
                                     helm-source-bookmarks
                                     helm-source-buffer-not-found))
+  )
 
   ;; don't include .pngs in recent files, they blow up the size.
-  (add-to-list 'recentf-exclude "\\.png\\'")
-
-  )
+(after! recentf
+  (add-to-list 'recentf-exclude "\\.png\\'"))
 
 ;; Make C-s swiper for file searches
 (map! "C-s" 'swiper)
@@ -159,7 +159,7 @@
 
 ;; still not working... ibuffer-projectile overrides this, too lazy to figure
 ;; out a full fix.
-(add-hook 'ibuffer-mode-hook
+(add-hook! 'ibuffer-mode-hook
            (lambda ()
              (ibuffer-auto-mode 1)
              (ibuffer-switch-to-saved-filter-groups "default")))
@@ -197,7 +197,7 @@
 ;;         (display-fill-column-indicator-mode 1))))
 
 (setq-default fill-column 79)
-(add-hook 'prog-mode-hook 'fci-mode)
+(add-hook! 'prog-mode-hook 'fci-mode)
 
 ;; add some initial height and width params
 (add-to-list 'default-frame-alist '(width . 98))
@@ -223,7 +223,7 @@
 (map! :n "C-;" 'evil-jump-item)
 
 ;; function for darkening org src blocks
-(after! color
+(after! (color org)
   (defun org-darken (darken_num)
     ;; darken the org block background
     (setq org-block-background (color-darken-name
@@ -261,8 +261,10 @@
           ))
 
   ;; new binding to display inline images again
-  ;; not sure if I need this actually, just use "z i" to toggle
-  ;; (map! :map org-mode-map "C-c C-b" 'org-redisplay-inline-images)
+  (map! :map org-mode-map "C-c C-b" 'org-redisplay-inline-images)
+
+  ;; try being able to display tramp images in org
+  (setq org-display-remote-inline-images 'cache)
 
   ;; make it so org blocks don't evaluate on export
   (setq org-export-use-babel nil)
@@ -334,7 +336,9 @@
   (remove-hook 'org-mode-hook #'doom-disable-show-paren-mode-h)
 
   ;;; display/update images in the buffer after I evaluate
-  (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
+  (add-hook! 'org-babel-after-execute-hook :append #'org-redisplay-inline-images)
+  (add-hook! 'org-babel-after-execute-hook #'org-redisplay-inline-images)
+
   )
 
 (after! evil-org
@@ -344,15 +348,17 @@
   (remove-hook 'org-tab-first-hook #'+org-clear-babel-results-h))
 
 
+;; TODO: this is not working and is annoying me... maybe delete bytecode
+;; org fork repo some other way
 ;;DONE: add in guiltydolphin org-evil
-(use-package! org-evil
-  :config
-  ;; same as the actual map now
-  ;; (map! :map org-list-mode-map
-  ;;       (:n "O" 'org-evil-list-open-item-or-insert-above)
-  ;;       (:n "o" 'org-evil-list-open-item-or-insert-below))
-  ;; (org-evil-mode) ;; already enabled I belive
-  )
+;; (use-package! org-evil
+;;   :config
+;;   ;; same as the actual map now
+;;   ;; (map! :map org-list-mode-map
+;;   ;;       (:n "O" 'org-evil-list-open-item-or-insert-above)
+;;   ;;       (:n "o" 'org-evil-list-open-item-or-insert-below))
+;;   ;; (org-evil-mode) ;; already enabled I belive
+;;   )
 
 ;;DONE: add multi line -- ok this might be too slow
 (after! multi-line
@@ -371,17 +377,18 @@
   (defun my-dired-mode-setup ()
     "show less information in dired buffers"
     (dired-hide-details-mode 1))
-  (add-hook 'dired-mode-hook 'my-dired-mode-setup)
+  (add-hook! 'dired-mode-hook 'my-dired-mode-setup)
 
   ;; toggle hidden files in dired with C-x M-o
   (setq dired-omit-files "^\\...+$")
-  (add-hook 'dired-mode-hook (lambda () (dired-omit-mode 1)))
+  (add-hook! 'dired-mode-hook (lambda () (dired-omit-mode 1)))
 )
 
 ;;DONE: get Mu4e sending to work
 (map! "C-x m" 'mu4e)
 ;; smtp
-(setq
+(with-eval-after-load 'smtpmail
+ (setq
    message-send-mail-function   'smtpmail-send-it
    ;; send-mail-function   'smtpmail-send-it
    ;; sendmail-program (executable-find "msmtp")
@@ -396,13 +403,14 @@
    ;; see post: https://www.reddit.com/r/emacs/comments/l0ra9z/mu4e_sending_email_with_macos_keychain/
    ;; for initial error and command to run in terminal
    auth-sources (quote (macos-keychain-internet macos-keychain-generic))
-   )
+   ))
 
 
 ;; doom modeline changes
 (setq doom-modeline-height 23) ;;25
 (setq doom-modeline-enable-word-count nil)
 (setq doom-modeline-buffer-modification-icon nil)
+(setq doom-modeline-buffer-file-name-style 'truncate-upto-project)
 
 ;; make the modeline height be able to decrease
 (defun my-doom-modeline--font-height ()
@@ -496,13 +504,19 @@
   )
 
 ;; show line numbers in dired
-(add-hook 'dired-mode-hook #'display-line-numbers-mode)
+(add-hook! 'dired-mode-hook #'display-line-numbers-mode)
 
 ;; add rainbow delims to all programming modes
-(add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
+(add-hook!'prog-mode-hook 'rainbow-delimiters-mode)
 
-;; mu4d update interval
-(setq mu4e-update-interval 300)
+
+;; Revert Doom-emacs fast index settings back to default
+(with-eval-after-load 'mu4e
+  (setq
+    mu4e-index-cleanup t      ;; do a full cleanup check
+    mu4e-index-lazy-check t    ;; consider up-to-date dirs
+    ;; mu4d update interval
+    mu4e-update-interval 300))
 
 (use-package! break-line
   :config
@@ -517,6 +531,7 @@
 ;; for now just don't actually enable julia-formatter-mode we'll just call
 ;; the server when calling julia-formatter-format-buffer, etc
 (use-package! julia-formatter
+  :after julia-mode
   ;; :hook (julia-mode  #'julia-formatter-mode)
   ;; (recommended) load the server in the background after startup
   ;; think this already loads when we hit julia mode
@@ -539,7 +554,7 @@
 ;; use autopep-8 on save instead of black on save (keep black for format/buffer
 ;; if wanted)
 (use-package! py-autopep8
-  :hook (python-mode . py-autopep8-enable-on-save))
+  :hook (python-mode . py-autopep8-mode))
 
 (after! treemacs
   (map! :map treemacs-mode-map [mouse-1] #'treemacs-single-click-expand-action)
@@ -601,5 +616,28 @@ they are changed"
 ;; quit inferior python mode more easily
 (map! :map inferior-python-mode-map :n "q" #'delete-window)
 
+;; make lines wrap in python map
+(add-hook! 'inferior-python-mode-hook 'visual-line-mode)
+
 ;; map q to kill buffer in imagemagik buffers
-(map! :map image-mode-map :n "q" #'kill-buffer-and-window)
+(map! :map image-mode-map "q" #'kill-buffer-and-window)
+
+;; debugging for tramp lsp
+;; (add-to-list 'tramp-remote-path 'tramp-own-remote-path)
+
+;; add tramp lsp for python.. doesn't work
+;; (after! lsp
+;;   (lsp-register-client
+;;       (make-lsp-client :new-connection (lsp-tramp-connection "pyls")
+;;                        :major-modes '(python-mode)
+;;                        :remote? t
+;;                        )
+;;       :server-id 'pyls-remote))
+
+;; change vterm shell to zsh
+(after! vterm
+  (setq vterm-shell "/bin/zsh"))
+
+
+;; take this out for now!
+;; (use-package! ox-ipynb)
